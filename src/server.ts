@@ -1,18 +1,11 @@
 import { Stream, Writable } from "stream";
-import chalk from "chalk";
 import * as SSH from "ssh2";
 import * as net from "net";
+import banner from "./banner";
 
 interface TunnelEvent {
   origin: net.AddressInfo;
   stream: Stream;
-}
-
-function banner(server: net.Server) {
-  const { port } = server.address() as net.AddressInfo;
-  return chalk`
-   {green {blue [i]} Started the tunnel. Press ^C to stop  }
-\n\r`;
 }
 
 function consume(stream: Stream): Promise<string> {
@@ -58,14 +51,14 @@ function bind(connection: SSH.Connection): Promise<net.Server> {
       } else {
         return reject();
       }
-      const server = net.createServer();
-      server.on("connection", tunnel(connection, { family: "", address, port }));
-      server.listen(443, "0.0.0.0", () => resolve(server));
+      const socket = net.createServer();
+      socket.on("connection", tunnel(connection, { family: "", address, port }));
+      socket.listen(80, "0.0.0.0", () => resolve(socket));
     });
   });
 }
 
-function getSession(connection: SSH.Connection): Promise<SSH.ServerChannel> {
+function getShell(connection: SSH.Connection): Promise<SSH.ServerChannel> {
   return new Promise((resolve, reject) => {
     connection.on("session", getSession => {
       const session = getSession();
@@ -83,7 +76,7 @@ export default (config: SSH.ServerConfig) =>
   new SSH.Server(config, async (connection, { ip }) => {
     console.log(`Client connected (${ip})`);
     const authenticated = await authenticate(connection);
-    const [server, shell] = await Promise.all([bind(authenticated), getSession(authenticated)]);
+    const [server, shell] = await Promise.all([bind(authenticated), getShell(authenticated)]);
     shell.write(banner(server));
     authenticated
       .on("tunnel", ({ stream, origin }: TunnelEvent) => {
@@ -96,7 +89,8 @@ export default (config: SSH.ServerConfig) =>
         console.log(`Client disconnected (${ip})`);
       })
       .on("error", (error) => {
-        shell.write(`[e] Caught an unexpected error. Aborting.`);
+        shell.write(`[e] Caught an unexpected error. Aborting.\n\r`);
+        shell.end();
         console.error(error);
       });
   });

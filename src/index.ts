@@ -19,5 +19,6 @@ Starting the tunnel server in environment '${process.env.NODE_ENV}'
 
 ==================================================================
 `);
+
 server.listen(22);
-health.listen(80);
+health.listen(8080);

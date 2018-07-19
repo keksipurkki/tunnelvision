@@ -1,17 +1,24 @@
-tunnel:
-  build: .
-  environment:
-    - NODE_ENV=production
-  ports:
-    - "80:80"
-    - "443:443"
-    - "22:22"
+version: '3'
 
-dev:
-  build: .
-  environment:
-    - NODE_ENV=development
-  ports:
-    - "80:80"
-    - "443:443"
-    - "22:22"
+services:
+  tunnel:
+    build: 
+      context: .
+      args:
+        NODE_ENV: production
+    ports:
+      - "8080:8080"
+      - "80:80"
+      - "22:22"
+  dev:
+    build: 
+      context: .
+      args:
+        NODE_ENV: development
+    ports:
+      - "8080:8080"
+      - "80:80"
+      - "22:22"
+    volumes:
+      - ./src:/var/app/src
+    command: ["npx", "ts-node-dev", "--respawn", "--transpileOnly", "./src/index.ts"]

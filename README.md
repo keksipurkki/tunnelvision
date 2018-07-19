@@ -1,5 +1,12 @@
 # Tunnelvision
 
+Create Fargate cluster & service
+
+```
+# Containers are HTTP, load balancers are HTTPS
+fargate service create tunnelvision --region eu-west-1
+```
+
 Deploy
 
 ```sh

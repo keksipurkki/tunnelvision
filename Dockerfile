@@ -16,10 +16,13 @@ ADD tsconfig.json $APP_HOME
 
 RUN npm install
 ADD src $APP_HOME/src
-RUN npx tsc && rm -rf src
-RUN npm prune --production
+RUN npx tsc --version && npx tsc && rm -rf src
+
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
+RUN test $NODE_ENV = production && npm prune --production || true
 
 EXPOSE 22
 EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 CMD [ "node", "dist/index.js" ]
