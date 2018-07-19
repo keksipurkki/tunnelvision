@@ -1,5 +1,11 @@
 # Tunnelvision
 
+Deploy
+
+```sh
+npm run deploy
+```
+
 Start the tunnel
 
 ```sh
