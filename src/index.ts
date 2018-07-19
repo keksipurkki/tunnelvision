@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import ssh from "./server";
+import health from "./health";
 
 const hostKeys = [
   "/etc/ssh/ssh_host_ecdsa_key",
@@ -19,3 +20,4 @@ Starting the tunnel server in environment '${process.env.NODE_ENV}'
 ==================================================================
 `);
 server.listen(22);
+health.listen(80);

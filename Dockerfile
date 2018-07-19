@@ -20,5 +20,6 @@ RUN npx tsc && rm -rf src
 RUN npm prune --production
 
 EXPOSE 22
+EXPOSE 80
 EXPOSE 443
 CMD [ "node", "dist/index.js" ]
