@@ -11,7 +11,7 @@ interface TunnelEvent {
 function banner(server: net.Server) {
   const { port } = server.address() as net.AddressInfo;
   return chalk`
-   {green {blue [i]} Tunneling https://localhost.automaton.fi to your localhost}
+   {green {blue [i]} Started the tunnel. Press ^C to stop  }
 \n\r`;
 }
 
@@ -26,11 +26,6 @@ function consume(stream: Stream): Promise<string> {
 
 function formatted(request: string, { address, port }: net.AddressInfo) {
   const [requestLine, ...headers] = request.split(/[\r\n]+/);
-  const host = headers.find(h => Boolean(h.match(/^host: /i)));
-  if (!host) {
-    throw new Error("error.invalid_request");
-  }
-  const [, hostname] = host.split(/host: /i);
   return `[${new Date().toISOString()}]: ${requestLine} (${address}:${port})\n\r`;
 }
 
@@ -65,7 +60,7 @@ function bind(connection: SSH.Connection): Promise<net.Server> {
       }
       const server = net.createServer();
       server.on("connection", tunnel(connection, { family: "", address, port }));
-      server.listen(port, address, () => resolve(server));
+      server.listen(443, "0.0.0.0", () => resolve(server));
     });
   });
 }
@@ -75,9 +70,8 @@ function getSession(connection: SSH.Connection): Promise<SSH.ServerChannel> {
     connection.on("session", getSession => {
       const session = getSession();
       session.on("pty", (accept, reject, info) => {
-        accept();
+        reject();
       });
-      session.on("signal", console.log);
       session.on("shell", accept => {
         resolve(accept());
       });
@@ -87,7 +81,7 @@ function getSession(connection: SSH.Connection): Promise<SSH.ServerChannel> {
 
 export default (config: SSH.ServerConfig) =>
   new SSH.Server(config, async (connection, { ip }) => {
-    console.log(`Client connected ${ip}`);
+    console.log(`Client connected (${ip})`);
     const authenticated = await authenticate(connection);
     const [server, shell] = await Promise.all([bind(authenticated), getSession(authenticated)]);
     shell.write(banner(server));
@@ -101,5 +95,8 @@ export default (config: SSH.ServerConfig) =>
         server.close();
         console.log(`Client disconnected (${ip})`);
       })
-      .on("error", console.error);
+      .on("error", (error) => {
+        shell.write(`[e] Caught an unexpected error. Aborting.`);
+        console.error(error);
+      });
   });

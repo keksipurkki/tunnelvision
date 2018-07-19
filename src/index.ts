@@ -1,11 +1,21 @@
 import * as fs from "fs";
 import ssh from "./server";
 
-const hostKey = `${process.env.HOME}/.ssh/proxy.pem`;
+const hostKeys = [
+  "/etc/ssh/ssh_host_ecdsa_key",
+  "/etc/ssh/ssh_host_rsa_key"
+];
 
 const sshConfig = {
-  hostKeys: [fs.readFileSync(hostKey)]
+  hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
 };
 
 const server = ssh(sshConfig);
+console.log(`
+==================================================================
+
+Starting the tunnel server in environment '${process.env.NODE_ENV}'
+
+==================================================================
+`);
 server.listen(22);
