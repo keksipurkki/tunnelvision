@@ -1,0 +1,25 @@
+{
+  "name": "tunnel",
+  "version": "1.0.0",
+  "description": "Tunnelvision: Private SSH tunnels",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node-dev --respawn --transpileOnly ./src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "2.4.1",
+    "ssh2": "0.6.1",
+    "tslib": "1.9.3",
+    "winston": "3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "10.5.2",
+    "@types/ssh2": "0.5.35",
+    "ts-node": "7.0.0",
+    "ts-node-dev": "1.0.0-pre.26",
+    "typescript": "2.9.2"
+  }
+}
