@@ -80,6 +80,10 @@ function tunnelEndpoint(prefix: string): URL {
   return url;
 }
 
+function canTunnel() {
+  return Object.keys(tunnels).length <= Number(process.env.MAX_CONNECTIONS);
+}
+
 export default () => {
   const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
 
@@ -113,6 +117,11 @@ export default () => {
         localhost.write(httpMessage(req));
       });
     };
+
+    if (!canTunnel()) {
+      authenticated.emit("error", new Error(`Run out of resources. Try again later. Sorry!`));
+      return;
+    }
 
     if (tunnels[url.hostname]) {
       authenticated.emit("error", new Error(`Domain ${url.hostname} is already in use`));

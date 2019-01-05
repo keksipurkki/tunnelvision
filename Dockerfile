@@ -7,6 +7,7 @@ ENV APP_HOME /var/app/
 ENV PROXY_PORT 3000
 ENV SSH_PORT 2222
 ENV HTTP_PORT 8080
+ENV MAX_CONNECTIONS 50
 
 RUN apk update && \
     apk add --no-cache \
