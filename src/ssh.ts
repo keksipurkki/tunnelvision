@@ -6,6 +6,7 @@ import * as SSH from "ssh2";
 import * as http from "http";
 import * as net from "net";
 import makeLogger from "./ssh-logging";
+import * as config from "../package.json";
 
 interface AuthenticatedConnection {
   username: string;
@@ -49,7 +50,7 @@ function getShell(connection: SSH.Connection): Promise<SSH.ServerChannel> {
   });
 }
 
-function bind(connection: SSH.Connection): Promise<net.AddressInfo> {
+function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
   return new Promise((resolve, reject) => {
     connection.on("request", (accept, deny, name, { bindAddr: address, bindPort: port }) => {
       if (name === "tcpip-forward") {
@@ -63,7 +64,7 @@ function bind(connection: SSH.Connection): Promise<net.AddressInfo> {
 }
 
 function httpMessage(req: http.IncomingMessage) {
-  const headers = [...req.rawHeaders, "X-Tunnel-Server", "tunnelvision"];
+  const headers = [...req.rawHeaders, "X-Tunnel-Server", `${config.name};version=${config.version}`];
   return [
     `${req.method} ${req.url} HTTP/${req.httpVersion}`,
     headers.map((h, i) => (i % 2 === 0 ? h + ": " : h + "\r\n")).join(""),
@@ -79,6 +80,10 @@ function tunnelEndpoint(prefix: string): URL {
   return url;
 }
 
+function homepage(): URL {
+  return new URL(`http://${process.env.DOMAIN}`);
+}
+
 export default () => {
   const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
 
@@ -91,7 +96,7 @@ export default () => {
   server.on("connection", async (connection, { ip }) => {
     console.log(`Client connected (${ip})`);
     const { username, connection: authenticated } = await authenticate(connection);
-    const [info, shell] = await Promise.all([bind(authenticated), getShell(authenticated)]);
+    const [info, shell] = await Promise.all([getAddressInfo(authenticated), getShell(authenticated)]);
     const url = tunnelEndpoint(username);
     const logging = makeLogger(shell);
 
@@ -129,10 +134,12 @@ export default () => {
     const url = new URL(`http://${req.headers.host}`);
     const hostname = url.hostname;
     if (!tunnels[hostname]) {
+      res.writeHead(404);
+      res.end();
       return;
     }
     const tunnel = tunnels[hostname];
-    console.log(`Found a tunnel for request from ${req.socket.address().address}`);
+    console.log(`Found a tunnel for a request for ${hostname}`);
     tunnel(req, res);
   });
 
