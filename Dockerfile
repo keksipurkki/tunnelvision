@@ -17,6 +17,7 @@ RUN apk update && \
 RUN addgroup -S tunnelvision && adduser -S -G tunnelvision tunnelvision
 RUN chown tunnelvision:tunnelvision /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_host_rsa_key
 RUN mkdir -p $APP_HOME
+ADD public $APP_HOME/public
 ADD src $APP_HOME/src
 RUN chown -R tunnelvision:tunnelvision $APP_HOME
 USER tunnelvision
@@ -28,7 +29,7 @@ ADD package-lock.json $APP_HOME/
 ADD tsconfig.json $APP_HOME
 
 RUN npm install
-RUN npx tsc --version && npx tsc && rm -rf src
+RUN npx tsc --version && npx tsc && rm -rf src && mv public dist
 
 ARG COMMIT=N/A
 ARG DOMAIN=tunnel.valuemotive.net
@@ -42,4 +43,4 @@ EXPOSE $SSH_PORT
 EXPOSE $PROXY_PORT
 EXPOSE $HTTP_PORT
 
-CMD [ "node", "dist/index.js" ]
+CMD [ "node", "dist/src/index.js" ]

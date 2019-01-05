@@ -22,4 +22,5 @@ services:
       - "22:2222"
     volumes:
       - ./src:/var/app/src
+      - ./public:/var/app/public
     command: ["npx", "ts-node-dev", "--respawn", "--transpileOnly", "./src/index.ts"]

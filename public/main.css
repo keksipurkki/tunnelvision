@@ -46,6 +46,8 @@ footer {
   margin-bottom: 2em;
 }
 
+footer span { white-space: nowrap; }
+
 .blinking-cursor {
   font-weight: 100;
   color: #2E3D48;

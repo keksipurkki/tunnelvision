@@ -32,7 +32,7 @@ const proxy = http.createServer((req, res) => {
 });
 
 const httpServer = express();
-httpServer.use("/", express.static(__dirname + "/public"));
+httpServer.use("/", express.static(__dirname + "/../public"));
 
 try {
   proxy.listen(PROXY_PORT, () => {
