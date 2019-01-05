@@ -1,19 +1,12 @@
 # Tunnelvision
 
-### Deploying
+## Set up
 
-```sh
-npm run deploy
+```
+npm install
+npm run start # Follow the instructions
 ```
 
-### Usage
+## Deploying to AWS
 
-```sh
-# Expose localhost:8080 at https://$USER.tunnel.valuemotive.net
-ssh -TR 443:localhost:8080 tunnel.valuemotive.net
-```
-
-```sh
-# Pick a custom subdomain
-ssh -TR 443:localhost:8080 myproject@tunnel.valuemotive.net
-```
+> TODO

@@ -80,10 +80,6 @@ function tunnelEndpoint(prefix: string): URL {
   return url;
 }
 
-function homepage(): URL {
-  return new URL(`http://${process.env.DOMAIN}`);
-}
-
 export default () => {
   const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
 

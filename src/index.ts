@@ -10,10 +10,17 @@ const SSH_PORT = Number(process.env.SSH_PORT);
 const PROXY_PORT = Number(process.env.PROXY_PORT);
 const HTTP_PORT = Number(process.env.HTTP_PORT);
 
+function homepage(): URL {
+  return new URL(`http://${process.env.DOMAIN}`);
+}
+
 console.log(`
 ===============================================================================
 
-Starting tunnelvision in environment '${process.env.NODE_ENV}' (image: ${process.env.COMMIT})
+Starting tunnelvision in environment '${process.env.NODE_ENV}'
+
+Image: ${process.env.COMMIT}
+Documentation: ${homepage()}
 
 ===============================================================================
 `);
