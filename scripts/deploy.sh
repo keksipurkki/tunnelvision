@@ -12,9 +12,9 @@ TASK_DEFINITON=tunnelvision-task-definition
 SERVICE=tunnelvision-service
 
 cd $REPO_ROOT
-
 source .env
-: ${AWS_PROFILE?} ${REPOSITORY?}
+
+: ${AWS_PROFILE?} ${REPOSITORY?} ${DOMAIN?}
 
 export AWS_PROFILE
 export REPOSITORY
@@ -23,7 +23,7 @@ export REPOSITORY
 function build()
 {
   cd $REPO_ROOT
-  docker build -t $REPOSITORY:latest --build-arg NODE_ENV=$ENVIRONMENT --build-arg COMMIT=$COMMIT .
+  docker build -t $REPOSITORY:latest --build-arg DOMAIN=$DOMAIN --build-arg NODE_ENV=$ENVIRONMENT --build-arg COMMIT=$COMMIT .
   docker tag $REPOSITORY:latest $REPOSITORY:$COMMIT
 }
 
