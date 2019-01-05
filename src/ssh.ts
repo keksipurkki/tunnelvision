@@ -121,7 +121,8 @@ export default () => {
     if (tunnels[url.hostname]) {
       authenticated.emit("error", new Error(`Domain ${url.hostname} is already in use`));
     } else {
-      logging.info(`Starting the tunnel. Remote endpoint is available at ${url}. Press ^C to stop.`);
+      logging.info(`Starting the tunnel`);
+      logging.info(`Remote endpoint is available at ${url}. Press ^C to stop`);
       tunnels[url.hostname] = makeTunnel(info.address, info.port);
       authenticated.on("end", () => {
         delete tunnels[url.hostname];

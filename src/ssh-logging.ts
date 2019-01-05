@@ -7,7 +7,7 @@ export default (writable: Writable) => ({
     return writable.write(chalk`{red [e]} ${message}\n\r`);
   },
   info(message: string) {
-    return writable.write(chalk`{blue [e]} ${message}\n\r`);
+    return writable.write(chalk`{blue [i]} ${message}\n\r`);
   },
   http(request: http.IncomingMessage) {
     const { port, address } = request.connection.address();

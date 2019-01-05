@@ -1,5 +1,7 @@
 import * as net from "net";
 import * as http from "http";
+import * as express from "express";
+import * as fs from "fs";
 import * as assert from "assert";
 import { URL } from "url";
 import ssh from "./ssh";
@@ -22,11 +24,8 @@ const proxy = http.createServer((req, res) => {
   sshServer.emit("tunnel", req, res);
 });
 
-const httpServer = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.write(`Write the docs...`);
-  res.end();
-});
+const httpServer = express();
+httpServer.use("/", express.static(__dirname + "/public"));
 
 try {
   proxy.listen(PROXY_PORT, () => {

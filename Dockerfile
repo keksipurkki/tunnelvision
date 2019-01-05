@@ -33,4 +33,8 @@ RUN test $NODE_ENV = production && npm prune --production || true
 EXPOSE $SSH_PORT
 EXPOSE $PROXY_PORT
 EXPOSE $HTTP_PORT
+
+RUN addgroup -S tunnelvision && adduser -S -G tunnelvision tunnelvision
+RUN chown tunnelvision:tunnelvision /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_host_rsa_key
+USER tunnelvision
 CMD [ "node", "dist/index.js" ]

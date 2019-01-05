@@ -1,0 +1,102 @@
+:root {
+  --textColor: lightgreen;
+  --backgroundColor: black;
+}
+
+body {
+  background-color: var(--backgroundColor);
+  color: var(--textColor);
+  font-family: 'VT323', monospace;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+[href] {
+  text-decoration: underline;
+}
+
+.info {
+  color: lightblue;
+}
+
+:visited {
+  color: var(--lightgreen);
+}
+
+pre {
+  font-family: 'VT323', monospace;
+}
+
+main {
+  flex: 1;
+  max-width: 960px;
+  width: 80%;
+  margin: 2% auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+footer {
+  flex: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2em;
+}
+
+.blinking-cursor {
+  font-weight: 100;
+  color: #2E3D48;
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
+
+@keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: lightgreen;
+  }
+}
+
+@-moz-keyframes blink {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: lightgreen;
+  }
+}
+
+@-webkit-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: lightgreen;
+  }
+}
+
+@-ms-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: lightgreen;
+  }
+}
+
+@-o-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: lightgreen;
+  }
+}
