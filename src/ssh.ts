@@ -136,7 +136,6 @@ export default () => {
       return;
     }
     const tunnel = tunnels[hostname];
-    console.log(`Found a tunnel for a request for ${hostname}`);
     tunnel(req, res);
   });
 
