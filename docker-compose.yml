@@ -2,23 +2,24 @@ version: '3'
 
 services:
   tunnel:
-    build: 
+    build:
       context: .
       args:
         NODE_ENV: production
     ports:
-      - "8080:8080"
-      - "80:80"
-      - "22:22"
+      - "3000:3000"
+      - "80:8080"
+      - "22:2222"
   dev:
-    build: 
+    build:
       context: .
       args:
         NODE_ENV: development
+        DOMAIN: localhost
     ports:
-      - "8080:8080"
-      - "80:80"
-      - "22:22"
+      - "3000:3000"
+      - "80:8080"
+      - "22:2222"
     volumes:
       - ./src:/var/app/src
     command: ["npx", "ts-node-dev", "--respawn", "--transpileOnly", "./src/index.ts"]

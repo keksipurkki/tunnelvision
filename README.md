@@ -1,21 +1,19 @@
 # Tunnelvision
 
-Create Fargate cluster & service
-
-```
-# Containers are HTTP, load balancers are HTTPS
-fargate service create tunnelvision --region eu-west-1
-```
-
-Deploy
+### Deploying
 
 ```sh
 npm run deploy
 ```
 
-Start the tunnel
+### Usage
 
 ```sh
-# Expose localhost:8080 at https://localhost.automaton.fi
-ssh -RT 443:localhost:8080 tunnel.automaton.fi
+# Expose localhost:8080 at https://$USER.tunnel.valuemotive.net
+ssh -TR 443:localhost:8080 tunnel.valuemotive.net
+```
+
+```sh
+# Pick a custom subdomain
+ssh -TR 443:localhost:8080 myproject@tunnel.valuemotive.net
 ```
