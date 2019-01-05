@@ -24,10 +24,12 @@ RUN npm install
 ADD src $APP_HOME/src
 RUN npx tsc --version && npx tsc && rm -rf src
 
+ARG COMMIT=N/A
 ARG DOMAIN=tunnel.valuemotive.net
 ENV DOMAIN=$DOMAIN
 ARG NODE_ENV=production
 ENV NODE_ENV=$NODE_ENV
+ENV COMMIT=$COMMIT
 RUN test $NODE_ENV = production && npm prune --production || true
 
 EXPOSE $SSH_PORT

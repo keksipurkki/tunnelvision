@@ -11,11 +11,11 @@ const PROXY_PORT = Number(process.env.PROXY_PORT);
 const HTTP_PORT = Number(process.env.HTTP_PORT);
 
 console.log(`
-==================================================================
+===============================================================================
 
-Starting tunnelvision in environment '${process.env.NODE_ENV}'
+Starting tunnelvision in environment '${process.env.NODE_ENV}' (image: ${process.env.COMMIT})
 
-==================================================================
+===============================================================================
 `);
 
 const sshServer = ssh();

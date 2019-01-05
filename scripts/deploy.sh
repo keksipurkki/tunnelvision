@@ -3,16 +3,21 @@
 set -o errexit
 set -o nounset
 
-export AWS_PROFILE=valuemotive
-
 REPO_ROOT=$(cd "${0%/*}"/..; pwd)
 COMMIT=$(git rev-parse --short HEAD)
-REPOSITORY=806232589401.dkr.ecr.eu-north-1.amazonaws.com/tunnelvision
 ENVIRONMENT=production
 
 CLUSTER=tunnelvision
 TASK_DEFINITON=tunnelvision-task-definition
 SERVICE=tunnelvision-service
+
+cd $REPO_ROOT
+
+source .env
+: ${AWS_PROFILE?} ${REPOSITORY?}
+
+export AWS_PROFILE
+export REPOSITORY
 
 # Build the latest image and update local Docker repository
 function build()
