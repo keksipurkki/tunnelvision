@@ -14,6 +14,13 @@ RUN apk update && \
     mkdir -p /etc/ssh && \
     ssh-keygen -A
 
+RUN addgroup -S tunnelvision && adduser -S -G tunnelvision tunnelvision
+RUN chown tunnelvision:tunnelvision /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_host_rsa_key
+RUN mkdir -p $APP_HOME
+ADD src $APP_HOME/src
+RUN chown -R tunnelvision:tunnelvision $APP_HOME
+USER tunnelvision
+
 WORKDIR $APP_HOME
 
 ADD package.json $APP_HOME/
@@ -21,7 +28,6 @@ ADD package-lock.json $APP_HOME/
 ADD tsconfig.json $APP_HOME
 
 RUN npm install
-ADD src $APP_HOME/src
 RUN npx tsc --version && npx tsc && rm -rf src
 
 ARG COMMIT=N/A
@@ -36,7 +42,4 @@ EXPOSE $SSH_PORT
 EXPOSE $PROXY_PORT
 EXPOSE $HTTP_PORT
 
-RUN addgroup -S tunnelvision && adduser -S -G tunnelvision tunnelvision
-RUN chown tunnelvision:tunnelvision /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_host_rsa_key
-USER tunnelvision
 CMD [ "node", "dist/index.js" ]
