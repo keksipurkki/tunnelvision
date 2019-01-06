@@ -11,6 +11,8 @@ export default (writable: Writable) => ({
   },
   http(request: http.IncomingMessage) {
     const { port, address } = request.connection.address();
-    return writable.write(`[${new Date().toISOString()}]: ${request.method} ${request.url} (${address}:${port})\n\r`);
+    return writable.write(
+      `[${new Date().toISOString()}]: ${request.method} ${request.url} (${address}:${port})\n\r`
+    );
   }
 });

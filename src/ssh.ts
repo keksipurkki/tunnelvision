@@ -1,6 +1,4 @@
-import { Stream, Writable } from "stream";
 import * as fs from "fs";
-import chalk from "chalk";
 import { URL } from "url";
 import * as SSH from "ssh2";
 import * as http from "http";
@@ -64,7 +62,11 @@ function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
 }
 
 function httpMessage(req: http.IncomingMessage) {
-  const headers = [...req.rawHeaders, "X-Tunnel-Server", `${config.name};version=${config.version}`];
+  const headers = [
+    ...req.rawHeaders,
+    "X-Tunnel-Server",
+    `${config.name};version=${config.version}`
+  ];
   return [
     `${req.method} ${req.url} HTTP/${req.httpVersion}`,
     headers.map((h, i) => (i % 2 === 0 ? h + ": " : h + "\r\n")).join(""),
@@ -96,7 +98,10 @@ export default () => {
   server.on("connection", async (connection, { ip }) => {
     console.log(`Client connected (${ip})`);
     const { username, connection: authenticated } = await authenticate(connection);
-    const [info, shell] = await Promise.all([getAddressInfo(authenticated), getShell(authenticated)]);
+    const [info, shell] = await Promise.all([
+      getAddressInfo(authenticated),
+      getShell(authenticated)
+    ]);
     const url = tunnelEndpoint(username);
     const logging = makeLogger(shell);
 

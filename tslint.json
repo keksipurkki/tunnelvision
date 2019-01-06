@@ -6,7 +6,6 @@
     },
     "rules": {
         "no-bitwise": [false],
-        "no-unused-variable": [true, { "ignore-pattern": "^_" }],
         "eofline": false,
         "quotemark": [true, "double"],
         "member-access": [false],
