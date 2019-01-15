@@ -1,9 +1,12 @@
+import { Stream, Writable } from "stream";
 import * as fs from "fs";
+import chalk from "chalk";
 import { URL } from "url";
 import * as SSH from "ssh2";
 import * as http from "http";
 import * as net from "net";
 import makeLogger from "./ssh-logging";
+import * as EventEmitter from "events";
 import * as config from "../package.json";
 
 interface AuthenticatedConnection {
@@ -11,13 +14,14 @@ interface AuthenticatedConnection {
   connection: SSH.Connection;
 }
 
-type TunnelFactory = (addr: string, port: number) => Tunnel;
-type Tunnel = (req: http.IncomingMessage, res: http.ServerResponse) => void;
-
 interface TunnelPool {
-  [domain: string]: Tunnel;
+  [domain: string]: {
+    connection: SSH.Connection;
+    tunnel: any;
+  };
 }
 
+const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
 const tunnels: TunnelPool = {};
 
 // Accept all incoming connections
@@ -61,17 +65,24 @@ function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
   });
 }
 
+function chunk<T>(arr: T[], size: number) {
+  const copy = [...arr];
+  const results = [];
+  while (copy.length) {
+    results.push(copy.splice(0, size));
+  }
+  return results;
+}
+
 function httpMessage(req: http.IncomingMessage) {
-  const headers = [
-    ...req.rawHeaders,
-    "X-Tunnel-Server",
-    `${config.name};version=${config.version}`
-  ];
-  return [
+  const CRLF = "\r\n";
+  const headers = [...req.rawHeaders, "X-Tunnel-Server", `${config.name};version=${config.version}`];
+  const lines = [
     `${req.method} ${req.url} HTTP/${req.httpVersion}`,
-    headers.map((h, i) => (i % 2 === 0 ? h + ": " : h + "\r\n")).join(""),
-    "\r\n\r\n"
-  ].join("\r\n");
+    ...chunk(headers, 2).map(h => h.join(": ")),
+    `${CRLF}${CRLF}`
+  ];
+  return lines.join(CRLF);
 }
 
 function tunnelEndpoint(prefix: string): URL {
@@ -87,8 +98,6 @@ function canTunnel() {
 }
 
 export default () => {
-  const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
-
   const config = {
     hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
   };
@@ -98,10 +107,7 @@ export default () => {
   server.on("connection", async (connection, { ip }) => {
     console.log(`Client connected (${ip})`);
     const { username, connection: authenticated } = await authenticate(connection);
-    const [info, shell] = await Promise.all([
-      getAddressInfo(authenticated),
-      getShell(authenticated)
-    ]);
+    const [info, shell] = await Promise.all([getAddressInfo(authenticated), getShell(authenticated)]);
     const url = tunnelEndpoint(username);
     const logging = makeLogger(shell);
 
@@ -110,47 +116,53 @@ export default () => {
       shell.end();
     });
 
-    const makeTunnel: TunnelFactory = (bindAddr, bindPort) => (req, res) => {
-      const { port, address } = req.socket.address();
-      authenticated.forwardOut(bindAddr, bindPort, address, port, (error, localhost) => {
-        if (error) {
-          logging.error(error.message);
-          return;
-        }
-        logging.http(req);
-        req.socket.pipe(localhost).pipe(req.socket);
-        localhost.write(httpMessage(req));
-      });
-    };
+    authenticated.on("tunnel", (req: http.IncomingMessage) => {
+      logging.access(req);
+    });
 
     if (!canTunnel()) {
-      authenticated.emit("error", new Error(`Run out of resources. Try again later. Sorry!`));
+      authenticated.emit("error", new Error(`The server has run out of resources. Try again later. Sorry!`));
       return;
     }
 
     if (tunnels[url.hostname]) {
       authenticated.emit("error", new Error(`Domain ${url.hostname} is already in use`));
-    } else {
-      logging.info(`Starting the tunnel`);
-      logging.info(`Remote endpoint is available at ${url}. Press ^C to stop`);
-      tunnels[url.hostname] = makeTunnel(info.address, info.port);
-      authenticated.on("end", () => {
-        delete tunnels[url.hostname];
-        console.log(`Client disconnected (${ip})`);
-      });
+      return;
     }
+
+    logging.info(`Starting the tunnel`);
+    logging.info(`Remote endpoint is available at ${url}`);
+    logging.info(`Press ^C to stop`);
+    tunnels[url.hostname] = {
+      connection: authenticated,
+      tunnel: authenticated.forwardOut.bind(authenticated, info.address, info.port)
+    };
+
+    authenticated.on("end", () => {
+      delete tunnels[url.hostname];
+      console.log(`Client disconnected (${ip})`);
+    });
   });
 
-  server.on("tunnel", (req: http.IncomingMessage, res: http.ServerResponse) => {
+  server.on("tunnel", (req: http.IncomingMessage) => {
     const url = new URL(`http://${req.headers.host}`);
     const hostname = url.hostname;
     if (!tunnels[hostname]) {
-      res.writeHead(404);
-      res.end();
+      console.log(`Dropping request for invalid target ${hostname}`);
+      req.socket.end();
       return;
     }
-    const tunnel = tunnels[hostname];
-    tunnel(req, res);
+    const { port, address } = req.socket.address();
+    const { tunnel, connection } = tunnels[hostname];
+    tunnel(address, port, (error: Error, localhost: net.Socket) => {
+      if (error) {
+        connection.emit("error", error);
+        return;
+      }
+      connection.emit("tunnel", req);
+      req.socket.pipe(localhost).pipe(req.socket);
+      localhost.write(httpMessage(req));
+    });
   });
 
   return server;

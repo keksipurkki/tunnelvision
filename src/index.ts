@@ -24,8 +24,8 @@ Documentation: ${homepage()}
 
 const sshServer = ssh();
 
-const proxy = http.createServer((req, res) => {
-  sshServer.emit("tunnel", req, res);
+const proxy = http.createServer(req => {
+  sshServer.emit("tunnel", req);
 });
 
 const httpServer = express();

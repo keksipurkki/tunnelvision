@@ -9,10 +9,9 @@ export default (writable: Writable) => ({
   info(message: string) {
     return writable.write(chalk`{blue [i]} ${message}\n\r`);
   },
-  http(request: http.IncomingMessage) {
-    const { port, address } = request.connection.address();
+  access(request: http.IncomingMessage) {
     return writable.write(
-      `[${new Date().toISOString()}]: ${request.method} ${request.url} (${address}:${port})\n\r`
+      `[${new Date().toISOString()}]: ${request.method} ${request.url} (${request.socket.remoteAddress})\n\r`
     );
   }
 });
