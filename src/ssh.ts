@@ -50,7 +50,7 @@ function getShell(connection: SSH.Connection): Promise<SSH.ServerChannel> {
 }
 
 function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
-  return new Promise((resolve, reject) => {
+  const promise = new Promise((resolve, reject) => {
     connection.on("request", (accept, deny, name, { bindAddr: address, bindPort: port }) => {
       if (name === "tcpip-forward") {
         accept();
@@ -60,6 +60,10 @@ function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
       resolve({ family: "", address, port });
     });
   });
+  const timeout = new Promise((resolve, reject) =>
+    setTimeout(reject, 30000, new Error("Timeout reached"))
+  );
+  return Promise.race([promise, timeout]) as Promise<net.AddressInfo>;
 }
 
 function chunk<T>(arr: T[], size: number) {
@@ -73,7 +77,11 @@ function chunk<T>(arr: T[], size: number) {
 
 function httpMessage(req: http.IncomingMessage) {
   const CRLF = "\r\n";
-  const headers = [...req.rawHeaders, "X-Tunnel-Server", `${config.name};version=${config.version}`];
+  const headers = [
+    ...req.rawHeaders,
+    "X-Tunnel-Server",
+    `${config.name};version=${config.version}`
+  ];
   const lines = [
     `${req.method} ${req.url} HTTP/${req.httpVersion}`,
     ...chunk(headers, 2).map(h => h.join(": ")),
@@ -103,42 +111,59 @@ export default () => {
 
   server.on("connection", async (connection, { ip }) => {
     console.log(`Client connected (${ip})`);
-    const { username, connection: authenticated } = await authenticate(connection);
-    const [info, shell] = await Promise.all([getAddressInfo(authenticated), getShell(authenticated)]);
-    const url = tunnelEndpoint(username);
-    const logging = makeLogger(shell);
-
-    authenticated.on("error", error => {
-      logging.error(`${error.message || "Caught an unexpected error"}. Aborting.`);
-      shell.end();
-    });
-
-    authenticated.on("tunnel", (req: http.IncomingMessage) => {
-      logging.access(req);
-    });
-
-    if (!canTunnel()) {
-      authenticated.emit("error", new Error(`The server has run out of resources. Try again later. Sorry!`));
-      return;
-    }
-
-    if (tunnels[url.hostname]) {
-      authenticated.emit("error", new Error(`Domain ${url.hostname} is already in use`));
-      return;
-    }
-
-    logging.info(`Starting the tunnel`);
-    logging.info(`Remote endpoint is available at ${url}`);
-    logging.info(`Press ^C to stop`);
-    tunnels[url.hostname] = {
-      connection: authenticated,
-      tunnel: authenticated.forwardOut.bind(authenticated, info.address, info.port)
-    };
-
-    authenticated.on("end", () => {
-      delete tunnels[url.hostname];
+    connection.on("end", () => {
       console.log(`Client disconnected (${ip})`);
     });
+
+    try {
+
+      const { username, connection: authenticated } = await authenticate(connection);
+      const [info, shell] = await Promise.all([
+        getAddressInfo(authenticated),
+        getShell(authenticated)
+      ]);
+
+      const url = tunnelEndpoint(username);
+      const logging = makeLogger(shell);
+
+      authenticated.on("error", error => {
+        logging.error(`${error.message || "Caught an unexpected error"}. Aborting.`);
+        shell.end();
+      });
+
+      authenticated.on("tunnel", (req: http.IncomingMessage) => {
+        logging.access(req);
+      });
+
+      if (!canTunnel()) {
+        authenticated.emit(
+          "error",
+          new Error(`The server has run out of resources. Try again later. Sorry!`)
+        );
+        return;
+      }
+
+      if (tunnels[url.hostname]) {
+        authenticated.emit("error", new Error(`Domain ${url.hostname} is already in use`));
+        return;
+      }
+
+      logging.info(`Starting the tunnel`);
+      logging.info(`Remote endpoint is available at ${url}`);
+      logging.info(`Press ^C to stop`);
+
+      tunnels[url.hostname] = {
+        connection: authenticated,
+        tunnel: authenticated.forwardOut.bind(authenticated, info.address, info.port)
+      };
+
+      authenticated.on("end", () => {
+        delete tunnels[url.hostname];
+      });
+
+    } catch (error) {
+      connection.end();
+    }
   });
 
   server.on("tunnel", (req: http.IncomingMessage) => {
