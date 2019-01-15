@@ -1,12 +1,9 @@
-import { Stream, Writable } from "stream";
 import * as fs from "fs";
-import chalk from "chalk";
 import { URL } from "url";
 import * as SSH from "ssh2";
 import * as http from "http";
 import * as net from "net";
 import makeLogger from "./ssh-logging";
-import * as EventEmitter from "events";
 import * as config from "../package.json";
 
 interface AuthenticatedConnection {
