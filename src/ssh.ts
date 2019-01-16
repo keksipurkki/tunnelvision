@@ -11,10 +11,12 @@ interface AuthenticatedConnection {
   connection: SSH.Connection;
 }
 
+type Callback = (error: Error, socket: SSH.ServerChannel) => void;
+
 interface TunnelPool {
   [domain: string]: {
     connection: SSH.Connection;
-    tunnel: any;
+    tunnel(addr: string, port: number, cb: Callback): void;
   };
 }
 
@@ -103,17 +105,15 @@ function canTunnel() {
 }
 
 export default () => {
-  const config = {
-    hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
-  };
 
-  const server = new SSH.Server(config);
+  const server = new SSH.Server({
+    hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
+  });
 
   server.on("connection", async (connection, { ip }) => {
+
     console.log(`Client connected (${ip})`);
-    connection.on("end", () => {
-      console.log(`Client disconnected (${ip})`);
-    });
+    connection.on("end", () => console.log(`Client disconnected (${ip})`));
 
     try {
 
@@ -131,15 +131,9 @@ export default () => {
         shell.end();
       });
 
-      authenticated.on("tunnel", (req: http.IncomingMessage) => {
-        logging.access(req);
-      });
-
       if (!canTunnel()) {
-        authenticated.emit(
-          "error",
-          new Error(`The server has run out of resources. Try again later. Sorry!`)
-        );
+        const error = new Error(`The server has run out of resources. Try again later. Sorry!`);
+        authenticated.emit("error", error);
         return;
       }
 
@@ -157,26 +151,31 @@ export default () => {
         tunnel: authenticated.forwardOut.bind(authenticated, info.address, info.port)
       };
 
-      authenticated.on("end", () => {
-        delete tunnels[url.hostname];
+      authenticated.on("tunnel", (req: http.IncomingMessage) => {
+        logging.access(req);
       });
+
+      authenticated.on("end", () => { delete tunnels[url.hostname]; });
 
     } catch (error) {
       connection.end();
     }
+
   });
 
   server.on("tunnel", (req: http.IncomingMessage) => {
     const url = new URL(`http://${req.headers.host}`);
     const hostname = url.hostname;
+
     if (!tunnels[hostname]) {
-      console.log(`Dropping request for invalid target ${hostname}`);
       req.socket.end();
       return;
     }
+
     const { port, address } = req.socket.address();
     const { tunnel, connection } = tunnels[hostname];
-    tunnel(address, port, (error: Error, localhost: net.Socket) => {
+
+    tunnel(address, port, (error, localhost) => {
       if (error) {
         connection.emit("error", error);
         return;
