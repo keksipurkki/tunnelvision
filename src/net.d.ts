@@ -1,5 +1,5 @@
 declare module "net" {
   interface Socket {
-    address(): any;
+    address(): AddressInfo;
   }
 }
