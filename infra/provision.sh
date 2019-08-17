@@ -39,7 +39,6 @@ cd tunnelvision-*/
 
 cat > .env <<EOF
 # AWS
-AWS_PROFILE=default
 AWS_ACCOUNT="011252223791"
 AWS_REGION=eu-north-1
 
