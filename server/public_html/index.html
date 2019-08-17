@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>
+      Tunnelvision
+    </title>
+    <link rel="stylesheet" href="main.css">
+    <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+</head>
+<body>
+  <main>
+    <h1>Tunnelvision</h1>
+    <pre>
+      # Expose your local project securely to public internet
+      ssh -TR 443:localhost:8080 myproject@<span class="hostname"></span>
+      <span class="info">[i]</span> Starting the tunnel
+      <span class="info">[i]</span> Remote endpoint is available at https://myproject.<span class="hostname"></span>/. Press ^C to stop<span class="blinking-cursor">|</span>
+    </pre>
+  </main>
+  <footer>
+      <span>Copyright (C) Elias Toivanen. Released under the MIT license.&nbsp;(<a href="https://github.com/keksipurkki/tunnelvision">GitHub</a>)</span>
+  </footer>
+  <script>
+    const nodes = [...document.querySelectorAll(".hostname")];
+    nodes.map(n => n.innerText = location.hostname);
+  </script>
+</body>
+</html>

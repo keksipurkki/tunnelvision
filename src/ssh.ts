@@ -3,6 +3,7 @@ import { URL } from "url";
 import * as SSH from "ssh2";
 import * as http from "http";
 import * as net from "net";
+import { tunnelEndpoint } from "./utils";
 import makeLogger from "./ssh-logging";
 import * as config from "../package.json";
 
@@ -20,7 +21,6 @@ interface TunnelPool {
   };
 }
 
-const hostKeys = ["/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_rsa_key"];
 const tunnels: TunnelPool = {};
 
 // Accept all incoming connections
@@ -92,19 +92,11 @@ function httpMessage(req: http.IncomingMessage) {
   return lines.join(CRLF);
 }
 
-function tunnelEndpoint(prefix: string): URL {
-  const url = new URL(`https://${prefix}.${process.env.DOMAIN}`);
-  if (process.env.NODE_ENV !== "production") {
-    url.protocol = "http";
+export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
+
+  function canTunnel() {
+    return Object.keys(tunnels).length <= Number(maxConnections);
   }
-  return url;
-}
-
-function canTunnel() {
-  return Object.keys(tunnels).length <= Number(process.env.MAX_CONNECTIONS);
-}
-
-export default () => {
 
   const server = new SSH.Server({
     hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
@@ -164,6 +156,7 @@ export default () => {
   });
 
   server.on("tunnel", (req: http.IncomingMessage) => {
+
     const url = new URL(`http://${req.headers.host}`);
     const hostname = url.hostname;
 

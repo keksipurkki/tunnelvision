@@ -3,19 +3,17 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "pretty": true,
-    "allowJs": true,
     "sourceMap": true,
     "target": "es2017",
-    "outDir": "./dist",
+    "outDir": "./server/dist",
     "strict": true,
     "importHelpers": true,
     "noUnusedLocals": true,
+    "esModuleInterop": true,
     "noImplicitReturns": true,
     "resolveJsonModule": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "lib": ["es2017", "dom"]
+    "lib": ["es2017"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
