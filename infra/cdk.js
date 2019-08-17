@@ -19,13 +19,6 @@ const tag = resource => `tunnelvision-${resource}`;
 
 /**
  *
- * Route53 settings
- *
- */
-class DNSStack extends cdk.Stack {}
-
-/**
- *
  * Autoscaling group
  *
  */
@@ -54,7 +47,6 @@ class TunnelvisionStack extends cdk.Stack {
       maxCapacity: 1,
       instanceType,
       machineImage,
-      keyName: "test",
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }
     });
 
@@ -74,15 +66,9 @@ class TunnelvisionStack extends cdk.Stack {
       "allow https from the world"
     );
 
-    securityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(23),
-      "allow deployments via port 23"
-    );
-
     const policy = iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonRoute53FullAccess");
     asg.role.addManagedPolicy(policy);
-    
+
   }
 }
 
