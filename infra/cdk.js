@@ -58,7 +58,7 @@ class TunnelvisionStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }
     });
 
-    // asg.addUserData(...provisionImage);
+    asg.addUserData(...provisionImage);
 
     const [securityGroup] = asg.securityGroups;
 
