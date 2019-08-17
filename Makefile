@@ -45,6 +45,12 @@ tunnelvision.zip:
 release: tunnelvision.zip
 	bin/publish.sh
 
+clean:
+	rm -rf cdk.out cdk.context.json tunnelvision.zip
+
+extra-clean: clean
+	rm -rf node_modules
+
 $(HOME)/.aws/credentials:
 	@echo No AWS credentials found for requesting LetsEncrypt TLS certificate
 	test -r $(HOME)/.aws/credentials
