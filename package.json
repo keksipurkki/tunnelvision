@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:syntax": "npx tsc --skipLibCheck --noEmit",
     "lint:style": "npx tslint --force src/**",
-    "prettier": "prettier --write src/**"
+    "prettier": "prettier --write src/**",
+    "start": "tsnd --clear -- src/index.ts"
   },
   "author": "Elias A. Toivanen",
   "license": "MIT",
