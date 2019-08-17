@@ -17,11 +17,6 @@ const provisionImage = fs
 
 const tag = resource => `tunnelvision-${resource}`;
 
-/**
- *
- * Autoscaling group
- *
- */
 class TunnelvisionStack extends cdk.Stack {
   constructor(app, id, env) {
     super(app, id, env);
