@@ -6,8 +6,6 @@ set -o nounset
 : ${EMAIL:?"Email is required"}
 : ${APP_HOSTNAME:?"App hostname is required"}
 
-export AWS_CONFIG_FILE=/home/root/.aws/credentials
-
 certbot certonly                  \
                 --dns-route53     \
                 --agree-tos       \

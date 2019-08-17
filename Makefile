@@ -37,7 +37,7 @@ tunnelvision.zip:
 	npm run build --prefix=tunnelvision-$(REVISION)
 	# NB: https://npm.community/t/npm-prune-does-not-respect-prefix-param/8632
 	cd tunnelvision-$(REVISION) && npm prune  --production 
-	rm -rf tunnelvision-$(REVISION)/src
+	rm -rf tunnelvision-$(REVISION)/{src,tsconfig.json,tslint.json}
 	zip -r tunnelvision.zip tunnelvision-$(REVISION)
 	rm -rf tunnelvision-$(REVISION)
 	unzip -l tunnelvision.zip
