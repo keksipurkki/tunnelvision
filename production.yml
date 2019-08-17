@@ -32,7 +32,6 @@ services:
     env_file:
       - ./.env
     volumes:
-      - ~/.aws:/home/root/.aws:ro
       - ./server/letsencrypt.sh:/letsencrypt.sh:ro
       - letsencrypt:/etc/letsencrypt
     entrypoint: ["sh", "/letsencrypt.sh"]

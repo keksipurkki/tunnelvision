@@ -1,3 +1,7 @@
+tunnelvision-*
+cdk.out
+cdk.context.json
+tunnelvision.zip
 dist
 .DS_Store
 node_modules
