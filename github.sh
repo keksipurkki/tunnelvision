@@ -28,16 +28,9 @@ function pretty()
   python -mjson.tool
 }
 
-function package() {
-  local release=tunnelvision.zip
-  test -r tunnelvision.zip
-  echo $release
-}
-
 source .env
 
-RELEASE=$(package)
-
+RELEASE=tunnelvision.zip
 IFS=: read GH_USER GH_TOKEN <<< "$GITHUB_CREDENTIALS"
 GH_TARGET=master
 VERSION=$(date '+%Y%m%d%H%M')

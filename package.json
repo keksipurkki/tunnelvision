@@ -9,6 +9,7 @@
     "lint:syntax": "tsc --skipLibCheck --noEmit",
     "lint:style": "tslint --force src/**",
     "lint": "npm run lint:syntax && npm run lint:style",
+    "release": "npm run lint && npm run build",
     "build": "tsc",
     "prettier": "prettier --write src/**",
     "start": "tsnd --clear -- src/index.ts"

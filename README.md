@@ -3,8 +3,7 @@
 ## Set up
 
 ```
-npm install
-npm run start # Follow the instructions
+make development
 ```
 
 ## Deploying to AWS

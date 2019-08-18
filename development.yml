@@ -1,11 +1,18 @@
 version: "3"
 
 services:
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - development
+    ports:
+      - "22:22"
+      - "80:80"
+    volumes:
+      - ./server/nginx.development.conf:/etc/nginx/nginx.conf
+      - ./server/public_html:/var/www/html
   development:
     image: node:12.8.1-alpine
-    ports:
-      - "22:2000"
-      - "80:3000"
     env_file:
       - ./.env
     environment:
