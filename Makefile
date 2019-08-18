@@ -30,6 +30,7 @@ clean-state:
 	test $(shell git rev-parse --abbrev-ref HEAD) = master
 
 tunnelvision.zip: $(BUILD_DIR)
+	rm -f tunnelvision.zip
 	zip -r tunnelvision.zip $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 	unzip -l tunnelvision.zip
