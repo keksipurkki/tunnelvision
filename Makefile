@@ -13,6 +13,7 @@ development: node_modules
 	docker service logs $(STACK_NAME)_development --raw --follow
 
 production: $(BUILD_DIR)
+	cp .env $(BUILD_DIR)
 	cd $(BUILD_DIR) && docker stack deploy $(STACK_NAME) -c production.yml
 	docker service logs $(STACK_NAME)_tunnelvision --raw --follow
 

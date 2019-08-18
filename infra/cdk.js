@@ -15,7 +15,8 @@ const logs = require("@aws-cdk/aws-logs");
 
 const policies = [
   "AmazonRoute53FullAccess", // TLS Cert challange
-  "CloudWatchLogsFullAccess" // Logging
+  "AmazonS3FullAccess", // TLS Cert persistence
+  "CloudWatchLogsFullAccess", // Logging
 ];
 
 const tag = resource => `tunnelvision-${resource}`;
