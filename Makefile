@@ -29,7 +29,7 @@ clean-state:
 	test -z "$(shell git status --porcelain 2> /dev/null)"
 	test $(shell git rev-parse --abbrev-ref HEAD) = master
 
-tunnelvision.zip: $(BUILD_DIR) clean-state
+tunnelvision.zip: $(BUILD_DIR)
 	zip -r tunnelvision.zip $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 	unzip -l tunnelvision.zip
@@ -42,8 +42,9 @@ $(BUILD_DIR):
 	# NB: https://npm.community/t/npm-prune-does-not-respect-prefix-param/8632
 	cd $(BUILD_DIR) && npm prune --production
 	rm -rf $(BUILD_DIR)/{src,tsconfig.json,tslint.json}
+	rm -rf $(BUILD_DIR)/node_modules/*/test
 
-release: tunnelvision.zip
+release: clean-state tunnelvision.zip
 	bash github.sh
 
 clean:
