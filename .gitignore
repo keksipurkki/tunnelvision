@@ -1,6 +1,7 @@
 tunnelvision-*
 cdk.out
 cdk.context.json
+*.log
 tunnelvision.zip
 dist
 .DS_Store

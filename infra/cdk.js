@@ -3,35 +3,28 @@
 
 require("dotenv").config();
 
+const path = require("path");
 const fs = require("fs");
 const ec2 = require("@aws-cdk/aws-ec2");
 const autoscaling = require("@aws-cdk/aws-autoscaling");
+const ecs = require("@aws-cdk/aws-ecs");
 const iam = require("@aws-cdk/aws-iam");
 const cdk = require("@aws-cdk/core");
-
-const provisionImage = fs
-  .readFileSync(`${__dirname}/provision.sh`)
-  .toString()
-  .split("\n")
-  .filter(Boolean);
+const logs = require("@aws-cdk/aws-logs");
 
 const tag = resource => `tunnelvision-${resource}`;
 
 class TunnelvisionStack extends cdk.Stack {
-  constructor(app, id, env) {
-    super(app, id, env);
+
+  constructor(app, id, context) {
+
+    super(app, id, context);
 
     const vpc = ec2.Vpc.fromLookup(this, "VPC", {
       isDefault: true
     });
 
-    const machineImage = new ec2.AmazonLinuxImage({
-      generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-      edition: ec2.AmazonLinuxEdition.STANDARD,
-      virtualization: ec2.AmazonLinuxVirt.HVM,
-      storage: ec2.AmazonLinuxStorage.GENERAL_PURPOSE
-    });
-
+    const machineImage = ecs.EcsOptimizedImage.amazonLinux2();
     const instanceType = ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO);
 
     const asg = new autoscaling.AutoScalingGroup(this, tag("ASG"), {
@@ -42,10 +35,18 @@ class TunnelvisionStack extends cdk.Stack {
       maxCapacity: 1,
       instanceType,
       machineImage,
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC
+      }
     });
 
-    asg.addUserData(...provisionImage);
+    const userData = fs
+      .readFileSync(path.join(__dirname, "provision.sh"))
+      .toString()
+      .split("\n")
+      .filter(Boolean);
+
+    asg.addUserData(...userData);
 
     const [securityGroup] = asg.securityGroups;
 
@@ -61,8 +62,13 @@ class TunnelvisionStack extends cdk.Stack {
       "allow https from the world"
     );
 
-    const policy = iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonRoute53FullAccess");
+    const policy = iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonECS_FullAccess");
     asg.role.addManagedPolicy(policy);
+
+    // Log group for provisioning output
+    new logs.LogGroup(this, tag("provisionLogs"), {
+      logGroupName: "/tunnelvision/provision"
+    });
 
   }
 }

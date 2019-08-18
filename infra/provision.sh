@@ -6,55 +6,108 @@
 #
 ###################################################################
 
-# Close stdin
-exec 0<&-
-
 set -e
 
-rm -rf tunnelvision.zip tunnelvision-*
+# Close stdin and save output
+exec 0<&- &> provision.log
 
-# Update runtime
-yum -y update
+finish() {
+  log_group=/tunnelvision/provision
+  log_stream=$(date +%Y%m%d)
+  timestamp=$(( 1000 * $(date +%s) ))
+  message="$(cat provision.log)"
+  aws logs put-log-events \
+    --log-group-name $log_group \
+    --log-stream-name $log_stream \
+    --log-events "timestamp=$timestamp,message=$message"
+}
 
-yes | amazon-linux-extras install docker
-service docker start
+trap finish EXIT
 
-# Free up port 22 and prevent monkey-business via SSH
-if which sshd; then
-  chkconfig sshd off || true
-  service sshd stop || true
-  yum -y erase openssh-server
-fi
+echo "It works!"
 
-# Mount previous Docker volumes if any
+#clean_state() {
+#  rm -rf tunnelvision.zip tunnelvision-*
+#  yum -y update
+#}
+#
+## Free up port 22 and prevent monkey-business via SSH
+#disable_ssh() {
+#  chkconfig sshd off || true
+#  service sshd stop || true
+#  yum -y erase openssh-server
+#}
+#
+#latest_release() {
+#  local url=$1
+#  curl -s "$url" | grep "browser_download_url.*zip" | cut -d '"' -f 4
+#}
+#
+#launch() {
+#
+#  pushd $1
+#
+#  cat > .env <<EOF
+## AWS
+#AWS_ACCOUNT="011252223791"
+#AWS_REGION=eu-north-1
+#
+## Misc
+#FORCE_COLOR=1
+#NODE_ENV=production
+#
+## App
+#MAX_CONNECTIONS=50
+#
+## Certbot
+#APP_HOSTNAME=tunnelvision.me
+#STACK_NAME=tunnelvision-me
+#EMAIL=admin@tunnelvision.me
+#
+#EOF
+#
+#  docker swarm init
+#  docker stack deploy tunnelvision -c production.yml
+#
+#  popd
+#
+#}
+#
+## Start
+#
+#clean_state
+#which sshd && disable_ssh
+#
+#cat << EOF
+#===================================================================
+#
+#Downloading the latest release
+#
+#===================================================================
+#EOF
+#
+#
+#release=$(latest_release https://api.github.com/repos/keksipurkki/tunnelvision/releases/latest)
+#curl -L $release -o tunnelvision.zip
+#unzip -q tunnelvision.zip
+#
+#release=$(echo tunnelvision-*)
+#
+#if [[ -z "$release" ]]; then
+#  echo "Failed to download the release" >&2
+#  exit 1
+#fi
+#
+#IFS=- read app version <<< "$release"
+#
+#cat << EOF
+#===================================================================
+#
+#  Launching $app (revision: $version)
+#
+#===================================================================
+#EOF
+#
+#launch $release
 
-# Profit
-curl -s https://api.github.com/repos/keksipurkki/tunnelvision/releases/latest \
-| grep "browser_download_url.*zip" \
-| cut -d '"' -f 4 > latest.url
-
-curl -Lo tunnelvision.zip $(< latest.url)
-unzip tunnelvision.zip
-cd tunnelvision-*/
-
-cat > .env <<EOF
-# AWS
-AWS_ACCOUNT="011252223791"
-AWS_REGION=eu-north-1
-
-# Misc
-FORCE_COLOR=1
-NODE_ENV=production
-
-# App
-MAX_CONNECTIONS=50
-
-# Certbot
-APP_HOSTNAME=tunnelvision.me
-STACK_NAME=tunnelvision-me
-EMAIL=admin@tunnelvision.me
-
-EOF
-source .env
-docker swarm init
-docker stack deploy $STACK_NAME -c production.yml
+# vim: set ft=bash :

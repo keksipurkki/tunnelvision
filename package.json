@@ -24,7 +24,9 @@
   "devDependencies": {
     "@aws-cdk/aws-autoscaling": "1.4.0",
     "@aws-cdk/aws-ec2": "1.4.0",
+    "@aws-cdk/aws-ecs": "1.4.0",
     "@aws-cdk/aws-iam": "1.4.0",
+    "@aws-cdk/aws-logs": "1.4.0",
     "@aws-cdk/core": "1.4.0",
     "@types/node": "12.7.2",
     "@types/ssh2": "0.5.38",
