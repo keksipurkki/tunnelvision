@@ -3,6 +3,7 @@
 
 require("dotenv").config();
 
+
 const path = require("path");
 const fs = require("fs");
 const ec2 = require("@aws-cdk/aws-ec2");
@@ -12,12 +13,15 @@ const iam = require("@aws-cdk/aws-iam");
 const cdk = require("@aws-cdk/core");
 const logs = require("@aws-cdk/aws-logs");
 
+const policies = [
+  "AmazonRoute53FullAccess", // TLS Cert challange
+  "CloudWatchLogsFullAccess" // Logging
+];
+
 const tag = resource => `tunnelvision-${resource}`;
 
 class TunnelvisionStack extends cdk.Stack {
-
   constructor(app, id, context) {
-
     super(app, id, context);
 
     const vpc = ec2.Vpc.fromLookup(this, "VPC", {
@@ -62,8 +66,10 @@ class TunnelvisionStack extends cdk.Stack {
       "allow https from the world"
     );
 
-    const policy = iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonECS_FullAccess");
-    asg.role.addManagedPolicy(policy);
+    for (const policyName of policies) {
+      const policy = iam.ManagedPolicy.fromAwsManagedPolicyName(policyName);
+      asg.role.addManagedPolicy(policy);
+    }
 
     // Log group for provisioning output
     new logs.LogGroup(this, tag("provisionLogs"), {

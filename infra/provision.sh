@@ -6,42 +6,31 @@
 #
 ###################################################################
 
-set -e
-
-# Close stdin and save output
-exec 0<&- &> provision.log
-
-finish() {
-  log_group=/tunnelvision/provision
-  log_stream=$(date +%Y%m%d)
-  timestamp=$(( 1000 * $(date +%s) ))
-  message="$(cat provision.log)"
-  aws logs put-log-events \
-    --log-group-name $log_group \
-    --log-stream-name $log_stream \
-    --log-events "timestamp=$timestamp,message=$message"
+#set -e
+#
+## Save output to system logs (EC2 Instances -> Actions -> Instance Settings -> System log)
+#exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+#
+#cat << EOF
+#===================================================================
+#
+#
+#Provisioning Tunnelvision
+#
+#$(date)
+#$(env)
+#
+#===================================================================
+#EOF
+#
+#suicide() {
+#  echo "Requesting the instance to terminate"
+#}
+#
+latest_release() {
+  local url=$1
+  curl -s "$url" | grep "browser_download_url.*zip" | cut -d '"' -f 4
 }
-
-trap finish EXIT
-
-echo "It works!"
-
-#clean_state() {
-#  rm -rf tunnelvision.zip tunnelvision-*
-#  yum -y update
-#}
-#
-## Free up port 22 and prevent monkey-business via SSH
-#disable_ssh() {
-#  chkconfig sshd off || true
-#  service sshd stop || true
-#  yum -y erase openssh-server
-#}
-#
-#latest_release() {
-#  local url=$1
-#  curl -s "$url" | grep "browser_download_url.*zip" | cut -d '"' -f 4
-#}
 #
 #launch() {
 #
@@ -75,29 +64,44 @@ echo "It works!"
 #
 ## Start
 #
-#clean_state
-#which sshd && disable_ssh
-#
-#cat << EOF
-#===================================================================
-#
-#Downloading the latest release
-#
-#===================================================================
-#EOF
-#
-#
-#release=$(latest_release https://api.github.com/repos/keksipurkki/tunnelvision/releases/latest)
-#curl -L $release -o tunnelvision.zip
-#unzip -q tunnelvision.zip
-#
-#release=$(echo tunnelvision-*)
-#
-#if [[ -z "$release" ]]; then
-#  echo "Failed to download the release" >&2
+#if [[ -d tunnelvision-* ]]; then
+#  echo "Image not in clean state. Aborting!" >&2
 #  exit 1
 #fi
 #
+#{
+#
+#  yum -y update
+#  yum -y install unzip
+#
+#  chkconfig sshd off
+#  service sshd stop
+#  yum -y erase openssh-server
+#
+#} > /dev/null
+
+cat << EOF
+===================================================================
+
+Downloading the latest release
+
+===================================================================
+EOF
+
+download_url=$(latest_release https://api.github.com/repos/keksipurkki/tunnelvision/releases/latest)
+curl -sL "$download_url" -o tunnelvision.zip
+unzip -q tunnelvision.zip
+
+release=$(echo tunnelvision-*)
+
+if [[ -d "$release" ]]; then
+  echo Found $release
+else
+  echo "Failed to download the release" >&2
+  ls -R
+  exit 1
+fi
+
 #IFS=- read app version <<< "$release"
 #
 #cat << EOF
@@ -109,5 +113,7 @@ echo "It works!"
 #EOF
 #
 #launch $release
-
-# vim: set ft=bash :
+#
+## TODO: Suicide or DNS connect
+#
+## vim: set ft=bash :
