@@ -26,6 +26,11 @@ services:
       - ./server/dist:/app:ro
       - ./node_modules:/node_modules:ro
     command: ["node", "/app/src"]
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-north-1
+        awslogs-group: /aws/tunnelvision
 
   certbot:
     image: certbot/dns-route53
@@ -35,6 +40,11 @@ services:
       - ./server/letsencrypt.sh:/letsencrypt.sh:ro
       - letsencrypt:/etc/letsencrypt
     entrypoint: ["sh", "/letsencrypt.sh"]
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-north-1
+        awslogs-group: /aws/tunnelvision/certbot
 
 volumes:
   letsencrypt: {}
