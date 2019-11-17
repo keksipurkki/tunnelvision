@@ -73,6 +73,7 @@ fi
 
   yum -y update
   yum -y install unzip
+  sudo amazon-linux-extras install -y ecs; sudo systemctl enable --now ecs
 
   chkconfig sshd off
   service sshd stop

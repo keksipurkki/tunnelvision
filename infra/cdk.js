@@ -72,11 +72,6 @@ class TunnelvisionStack extends cdk.Stack {
       asg.role.addManagedPolicy(policy);
     }
 
-    // Log group for provisioning output
-    new logs.LogGroup(this, tag("provisionLogs"), {
-      logGroupName: "/tunnelvision/provision"
-    });
-
   }
 }
 
