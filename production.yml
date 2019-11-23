@@ -30,7 +30,7 @@ services:
       driver: awslogs
       options:
         awslogs-region: eu-north-1
-        awslogs-group: /aws/tunnelvision
+        awslogs-group: /keksipurkki/tunnelvision
         awslogs-stream: app
 
   certbot:
@@ -45,7 +45,7 @@ services:
       driver: awslogs
       options:
         awslogs-region: eu-north-1
-        awslogs-group: /aws/tunnelvision
+        awslogs-group: /keksipurkki/tunnelvision
         awslogs-stream: certbot
 
 volumes:

@@ -47,7 +47,7 @@ $(BUILD_DIR):
 	rm -rf $(BUILD_DIR)/node_modules/*/test
 
 release: clean-state tunnelvision.zip
-	bash github.sh
+	./tunnelvision.sh release
 
 clean:
 	rm -rf cdk.out cdk.context.json tunnelvision.zip $(BUILD_DIR)

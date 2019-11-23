@@ -3,7 +3,6 @@
 
 require("dotenv").config();
 
-
 const path = require("path");
 const fs = require("fs");
 const ec2 = require("@aws-cdk/aws-ec2");
@@ -72,6 +71,12 @@ class TunnelvisionStack extends cdk.Stack {
       asg.role.addManagedPolicy(policy);
     }
 
+    new logs.LogGroup(this, tag("Logs"), {
+      logGroupName: "/keksipurkki/tunnelvision",
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
   }
 }
 
@@ -80,7 +85,7 @@ const app = new cdk.App();
 new TunnelvisionStack(app, TunnelvisionStack.name, {
   env: {
     account: process.env.AWS_ACCOUNT,
-    region: process.env.AWS_REGION
+    region: process.env.AWS_DEFAULT_REGION
   }
 });
 
