@@ -1,29 +1,29 @@
-version: "3"
+version: '2.1'
 
 services:
   nginx:
-    image: nginx:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.server
     depends_on:
-      - development
-    ports:
-      - "22:22"
-      - "80:80"
+      development:
+        condition: service_healthy
+      certbot:
+        condition: service_healthy
     volumes:
       - ./server/nginx.development.conf:/etc/nginx/nginx.conf
-      - ./server/public_html:/var/www/html
+    ports:
+      - "22:22"
+      - "443:443"
+    volumes_from:
+      - certbot
   development:
-    image: node:12.8.1-alpine
+    image: app
     env_file:
       - ./.env
     environment:
       - NODE_ENV=local
-    working_dir: /app
-    volumes:
-      - ssh:/app/ssh
-      - ./:/app
-    command: ["npm", "run", "start"]
   certbot:
-    image: certbot
     build:
       context: .
       dockerfile: Dockerfile.certbot
@@ -35,3 +35,4 @@ services:
 
 volumes:
   ssh: {}
+  certbot: {}

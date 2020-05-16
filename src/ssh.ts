@@ -102,10 +102,7 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
     hostKeys: hostKeys.map(fname => fs.readFileSync(fname))
   });
 
-  server.on("connection", async (connection, { ip }) => {
-
-    console.log(`Client connected (${ip})`);
-    connection.on("end", () => console.log(`Client disconnected (${ip})`));
+  server.on("connection", async (connection) => {
 
     try {
 

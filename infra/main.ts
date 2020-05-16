@@ -48,6 +48,18 @@ class TunnelvisionStack extends cdk.Stack {
   }
 
   get taskDefinition() {
+    const streamPrefix = "tunnelvision";
+    const logGroup = new logs.LogGroup(this, "tunnelvision-logs", {
+      logGroupName: "tunnelvision.me",
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
+    const logging = ecs.LogDriver.awsLogs({
+      streamPrefix,
+      logGroup
+    });
+
     const taskDefinition = new ecs.FargateTaskDefinition(this, "tunnelvision-taskdefinition", {
       family: "tunnelvision",
       taskRole: this.taskRole
@@ -55,21 +67,12 @@ class TunnelvisionStack extends cdk.Stack {
 
     const exclude = ["node_modules", "cdk.out"];
 
-    const logGroup = new logs.LogGroup(this, "tunnelvision-logs", {
-      logGroupName: "tunnelvision.me",
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY
-    });
-
     const server = taskDefinition.addContainer("nginx", {
       image: ecs.ContainerImage.fromAsset(this.buildDir, {
         file: "Dockerfile.server",
         exclude
       }),
-      logging: ecs.LogDriver.awsLogs({
-        logGroup,
-        streamPrefix: "server"
-      })
+      logging
     });
 
     const app = taskDefinition.addContainer("app", {
@@ -77,10 +80,7 @@ class TunnelvisionStack extends cdk.Stack {
         file: "Dockerfile.app",
         exclude
       }),
-      logging: ecs.LogDriver.awsLogs({
-        logGroup,
-        streamPrefix: "app"
-      }),
+      logging,
       environment: {
         MAX_CONNECTIONS: "50",
         FORCE_COLOR: "1",
@@ -96,10 +96,7 @@ class TunnelvisionStack extends cdk.Stack {
         file: "Dockerfile.certbot",
         exclude
       }),
-      logging: ecs.LogDriver.awsLogs({
-        logGroup,
-        streamPrefix: "certbot"
-      }),
+      logging,
       environment: {
         APP_HOSTNAME: "tunnelvision.me",
         EMAIL: "admin@tunnelvision.me"
