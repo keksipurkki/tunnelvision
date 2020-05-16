@@ -15,7 +15,7 @@ const logs = require("@aws-cdk/aws-logs");
 const policies = [
   "AmazonRoute53FullAccess", // TLS Cert challange
   "AmazonS3FullAccess", // TLS Cert persistence
-  "CloudWatchLogsFullAccess", // Logging
+  "CloudWatchLogsFullAccess" // Logging
 ];
 
 const tag = resource => `tunnelvision-${resource}`;
@@ -29,14 +29,23 @@ class TunnelvisionStack extends cdk.Stack {
     });
 
     const machineImage = ecs.EcsOptimizedImage.amazonLinux2();
-    const instanceType = ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO);
+    const instanceType = ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.NANO);
 
+    // TODO: Reduce machine image below 30 g
     const asg = new autoscaling.AutoScalingGroup(this, tag("ASG"), {
       vpc,
       associatePublicIpAddress: true,
-      desiredCapacity: 1,
       minCapacity: 0,
       maxCapacity: 1,
+      blockDevices: [
+        {
+          deviceName: "/dev/xvda",
+          volume: autoscaling.BlockDeviceVolume.ebs(30, {
+            deleteOnTermination: true,
+            encrypted: true
+          })
+        }
+      ],
       instanceType,
       machineImage,
       vpcSubnets: {
@@ -76,7 +85,6 @@ class TunnelvisionStack extends cdk.Stack {
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
-
   }
 }
 
