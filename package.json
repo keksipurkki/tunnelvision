@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:syntax": "tsc --skipLibCheck --noEmit",
-    "lint:style": "tslint --force src/**",
+    "lint:style": "eslint src/**",
     "lint": "npm run lint:syntax && npm run lint:style",
     "release": "npm run lint && npm run build",
     "build": "tsc",
@@ -30,10 +30,11 @@
     "@aws-cdk/core": "1.39.0",
     "@types/node": "14.0.1",
     "@types/ssh2": "0.5.43",
+    "@typescript-eslint/parser": "^2.33.0",
     "aws-cdk": "1.39.0",
     "dotenv": "8.2.0",
+    "eslint": "^7.0.0",
     "ts-node-dev": "1.0.0-pre.44",
-    "tslint": "6.1.2",
     "typescript": "3.9.2"
   }
 }
