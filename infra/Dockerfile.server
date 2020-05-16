@@ -1,0 +1,9 @@
+FROM nginx:latest
+
+COPY server/nginx.conf      /etc/nginx/nginx.conf
+COPY server/tls.conf        /etc/nginx/tls.conf
+COPY server/ffdhe4096.pem   /etc/nginx/ffdhe4096.pem
+COPY server/public_html     /var/www/html
+
+EXPOSE 443
+EXPOSE 22

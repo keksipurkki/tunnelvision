@@ -1,0 +1,4 @@
+FROM certbot/dns-route53
+COPY server/letsencrypt.sh /letsencrypt.sh
+VOLUME ["/etc/letsencrypt"]
+ENTRYPOINT ["sh", "/letsencrypt.sh"]
