@@ -17,7 +17,7 @@ else
     --dns-route53     \
     --agree-tos       \
     --email $EMAIL    \
-    --cert-name tunnelvision.me \
+    --cert-name $APP_HOSTNAME \
     -n                \
     -d $APP_HOSTNAME  \
     -d '*.'$APP_HOSTNAME
