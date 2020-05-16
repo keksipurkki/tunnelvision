@@ -21,4 +21,7 @@ RUN npm install --production && mkdir ssh
 EXPOSE 2000
 EXPOSE 3000
 
+RUN echo "netstat -an | grep 3000" > /health.sh
+HEALTHCHECK CMD sh /health.sh
+
 CMD ["node", "src"]

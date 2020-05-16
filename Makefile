@@ -21,10 +21,22 @@ rm:
 	docker stack rm $(STACK_NAME)
 
 node_modules:
-	NODE_ENV= npm install
+	npm ci
 
-provision: node_modules
-	npx cdk --app 'node infra/cdk' deploy TunnelvisionStack
+bootstrap:
+	npx cdk bootstrap \
+		--toolkit-stack-name aws-cdk-toolkit \
+		--bootstrap-bucket-name aws-cdk-toolkit \
+		aws://${AWS_ACCOUNT}/${AWS_DEFAULT_REGION}
+
+cdk/deploy: node_modules
+	npx cdk deploy tunnelvision
+
+cdk/diff:
+	npx cdk diff tunnelvision
+
+cdk/synth:
+	npx cdk synth tunnelvision
 
 clean-state:
 	test -z "$(shell git status --porcelain 2> /dev/null)"
@@ -36,15 +48,11 @@ tunnelvision.zip: $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 	unzip -l tunnelvision.zip
 
-$(BUILD_DIR):
-	mkdir $(BUILD_DIR)
-	cp -r $(BUILD_FILES) $(BUILD_DIR)
-	NODE_ENV= npm install --prefix=$(BUILD_DIR)
-	npm run release --prefix=$(BUILD_DIR)
-	# NB: https://npm.community/t/npm-prune-does-not-respect-prefix-param/8632
-	cd $(BUILD_DIR) && npm prune --production
-	rm -rf $(BUILD_DIR)/{src,tsconfig.json,tslint.json}
-	rm -rf $(BUILD_DIR)/node_modules/*/test
+dist: node_modules
+	npm run release
+
+$(BUILD_DIR): dist
+	mv dist $(BUILD_DIR)
 
 release: clean-state tunnelvision.zip
 	./tunnelvision.sh release

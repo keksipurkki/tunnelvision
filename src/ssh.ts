@@ -12,7 +12,7 @@ interface AuthenticatedConnection {
   connection: SSH.Connection;
 }
 
-type Callback = (error: Error, socket: SSH.ServerChannel) => void;
+type Callback = (error: Error | undefined, socket: SSH.ServerChannel) => void;
 
 interface TunnelPool {
   [domain: string]: {
@@ -25,7 +25,7 @@ const tunnels: TunnelPool = {};
 
 // Accept all incoming connections
 function authenticate(connection: SSH.Connection): Promise<AuthenticatedConnection> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     let username = "";
     connection
       .on("authentication", context => {
@@ -38,11 +38,11 @@ function authenticate(connection: SSH.Connection): Promise<AuthenticatedConnecti
 
 // Allocate a shell for connecting clients
 function getShell(connection: SSH.Connection): Promise<SSH.ServerChannel> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     connection.on("session", getSession => {
       const session = getSession();
-      session.on("pty", (accept, reject, info) => {
-        reject();
+      session.on("pty", (_accept, reject, _info) => {
+        reject && reject();
       });
       session.on("shell", accept => {
         resolve(accept());
@@ -52,17 +52,17 @@ function getShell(connection: SSH.Connection): Promise<SSH.ServerChannel> {
 }
 
 function getAddressInfo(connection: SSH.Connection): Promise<net.AddressInfo> {
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise((resolve, _reject) => {
     connection.on("request", (accept, deny, name, { bindAddr: address, bindPort: port }) => {
       if (name === "tcpip-forward") {
-        accept();
+        accept && accept();
       } else {
-        return deny();
+        return deny && deny();
       }
       resolve({ family: "", address, port });
     });
   });
-  const timeout = new Promise((resolve, reject) =>
+  const timeout = new Promise((_resolve, reject) =>
     setTimeout(reject, 30000, new Error("Timeout reached"))
   );
   return Promise.race([promise, timeout]) as Promise<net.AddressInfo>;
@@ -177,6 +177,10 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
       req.socket.pipe(localhost).pipe(req.socket);
       localhost.write(httpMessage(req));
     });
+  });
+
+  server.on("error", (error) => {
+    console.error(error);
   });
 
   return server;

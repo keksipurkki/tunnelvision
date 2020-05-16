@@ -4,8 +4,13 @@ import * as ec2 from "@aws-cdk/aws-ec2";
 import * as logs from "@aws-cdk/aws-logs";
 import * as ecs from "@aws-cdk/aws-ecs";
 
+interface TunnelvisionStackProps extends cdk.StackProps {
+  buildDir: string;
+}
+
 class TunnelvisionStack extends cdk.Stack {
-  constructor(scope: cdk.Construct) {
+  buildDir: string;
+  constructor(scope: cdk.Construct, props: TunnelvisionStackProps) {
     super(scope, "tunnelvision", {
       description: "tunnelvision.me",
       env: {
@@ -13,13 +18,18 @@ class TunnelvisionStack extends cdk.Stack {
         region: process.env.AWS_DEFAULT_REGION
       }
     });
+    this.buildDir = props.buildDir;
   }
 
-  service() {
+  get service() {
     const service = new ecs.FargateService(this, "tunnelvision-service", {
       serviceName: "tunnelvision",
       cluster: this.cluster,
-      taskDefinition: this.taskDefinition
+      taskDefinition: this.taskDefinition,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC
+      },
+      assignPublicIp: true
     });
 
     service.connections.allowFromAnyIpv4(ec2.Port.tcp(22), "Allow SSH");
@@ -30,6 +40,7 @@ class TunnelvisionStack extends cdk.Stack {
 
   get cluster() {
     return new ecs.Cluster(this, "tunnelvision-cluster", {
+      clusterName: "tunnelvision-cluster",
       vpc: ec2.Vpc.fromLookup(this, "default-vpc", {
         isDefault: true
       })
@@ -38,56 +49,67 @@ class TunnelvisionStack extends cdk.Stack {
 
   get taskDefinition() {
     const taskDefinition = new ecs.FargateTaskDefinition(this, "tunnelvision-taskdefinition", {
+      family: "tunnelvision",
       taskRole: this.taskRole
     });
 
+    const exclude = ["node_modules", "cdk.out"];
+
     const logGroup = new logs.LogGroup(this, "tunnelvision-logs", {
-      logGroupName: "tunnelvision.me"
+      logGroupName: "tunnelvision.me",
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     const server = taskDefinition.addContainer("nginx", {
-      image: ecs.ContainerImage.fromAsset("infra", {
-        file: "Dockerfile.server"
+      image: ecs.ContainerImage.fromAsset(this.buildDir, {
+        file: "Dockerfile.server",
+        exclude
       }),
       logging: ecs.LogDriver.awsLogs({
         logGroup,
-        streamPrefix: "server",
-        logRetention: logs.RetentionDays.ONE_MONTH
+        streamPrefix: "server"
       })
     });
 
     const app = taskDefinition.addContainer("app", {
-      image: ecs.ContainerImage.fromAsset("infra", {
-        file: "Dockerfile.app"
+      image: ecs.ContainerImage.fromAsset(this.buildDir, {
+        file: "Dockerfile.app",
+        exclude
       }),
       logging: ecs.LogDriver.awsLogs({
         logGroup,
-        streamPrefix: "app",
-        logRetention: logs.RetentionDays.ONE_MONTH
+        streamPrefix: "app"
       }),
       environment: {
         MAX_CONNECTIONS: "50",
         FORCE_COLOR: "1",
         NODE_ENV: "production"
+      },
+      healthCheck: {
+        command: ["sh", "/health.sh"]
       }
     });
 
     const certbot = taskDefinition.addContainer("certbot", {
-      image: ecs.ContainerImage.fromAsset("infra", {
-        file: "Dockerfile.certbot"
+      image: ecs.ContainerImage.fromAsset(this.buildDir, {
+        file: "Dockerfile.certbot",
+        exclude
       }),
       logging: ecs.LogDriver.awsLogs({
         logGroup,
-        streamPrefix: "certbot",
-        logRetention: logs.RetentionDays.ONE_MONTH
+        streamPrefix: "certbot"
       }),
       environment: {
         APP_HOSTNAME: "tunnelvision.me",
         EMAIL: "admin@tunnelvision.me"
+      },
+      healthCheck: {
+        command: ["sh", "/health.sh"]
       }
     });
 
-    // Mount Let's encrypt TLS certs to the nginx container
+    // Container linking
     server.addVolumesFrom({ sourceContainer: certbot.containerName, readOnly: true });
 
     // Docker container networking
@@ -104,10 +126,12 @@ class TunnelvisionStack extends cdk.Stack {
 
     server.addContainerDependencies(
       {
-        container: app
+        container: app,
+        condition: ecs.ContainerDependencyCondition.HEALTHY
       },
       {
-        container: certbot
+        container: certbot,
+        condition: ecs.ContainerDependencyCondition.HEALTHY
       }
     );
 
@@ -115,10 +139,11 @@ class TunnelvisionStack extends cdk.Stack {
   }
 
   get taskRole() {
-    const policies = ["AWSServiceRoleForECS", "AmazonS3FullAccess"];
+    const policies = ["service-role/AmazonECSTaskExecutionRolePolicy", "AmazonS3FullAccess"];
 
     const role = new iam.Role(this, "tunnelvision-role", {
-      assumedBy: new iam.ServicePrincipal("ecs.amazonaws.com")
+      roleName: "tunnelvision-role",
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com")
     });
 
     for (const policyName of policies) {
@@ -132,8 +157,11 @@ class TunnelvisionStack extends cdk.Stack {
 
 function main() {
   const app = new cdk.App();
-  const stack = new TunnelvisionStack(app);
+  const stack = new TunnelvisionStack(app, {
+    buildDir: process.cwd()
+  });
   console.log(`Synthesizing ${stack.stackName}`);
+  console.log(`Service name: ${stack.service}`);
   app.synth();
 }
 

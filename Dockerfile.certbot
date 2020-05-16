@@ -1,0 +1,7 @@
+FROM certbot/dns-route53:latest
+RUN pip install --upgrade pip && pip install awscli botocore
+COPY server/letsencrypt.sh /letsencrypt.sh
+VOLUME ["/etc/letsencrypt"]
+RUN echo "stat /etc/letsencrypt || exit 1" > /health.sh
+HEALTHCHECK CMD sh /health.sh
+ENTRYPOINT ["sh", "/letsencrypt.sh"]

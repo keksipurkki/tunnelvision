@@ -22,6 +22,16 @@ services:
       - ssh:/app/ssh
       - ./:/app
     command: ["npm", "run", "start"]
+  certbot:
+    image: certbot
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot
+    env_file: .env
+    environment:
+      - APP_HOSTNAME=tunnelvision.me
+    volumes:
+      - ~/.aws:/root/.aws:ro
 
 volumes:
   ssh: {}

@@ -1,3 +1,4 @@
 {
-  "app": "ts-node infra/main.ts"
+  "app": "ts-node infra/main.ts",
+  "toolkitStackName": "aws-cdk-toolkit"
 }
