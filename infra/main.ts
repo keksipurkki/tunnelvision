@@ -62,7 +62,8 @@ class TunnelvisionStack extends cdk.Stack {
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, "tunnelvision-taskdefinition", {
       family: "tunnelvision",
-      taskRole: this.taskRole
+      taskRole: this.taskRole,
+      executionRole: this.taskExecutionRole
     });
 
     const exclude = ["node_modules", "cdk.out"];
@@ -135,8 +136,9 @@ class TunnelvisionStack extends cdk.Stack {
     return taskDefinition;
   }
 
+  // When the running app instances makes AWS calls
   get taskRole() {
-    const policies = ["service-role/AmazonECSTaskExecutionRolePolicy", "AmazonS3FullAccess"];
+    const policies = ["AmazonS3FullAccess"];
 
     const role = new iam.Role(this, "tunnelvision-role", {
       roleName: "tunnelvision-role",
@@ -150,7 +152,27 @@ class TunnelvisionStack extends cdk.Stack {
 
     return role;
   }
+
+  // When ECS creates a task
+  get taskExecutionRole() {
+    const policies = ["service-role/AmazonECSTaskExecutionRolePolicy"];
+
+    const role = new iam.Role(this, "tunnelvision-execution-role", {
+      roleName: "tunnelvision-execution-role",
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com")
+    });
+
+    for (const policyName of policies) {
+      const policy = iam.ManagedPolicy.fromAwsManagedPolicyName(policyName);
+      role.addManagedPolicy(policy);
+    }
+
+    return role;
+
+  }
+
 }
+
 
 function main() {
   const app = new cdk.App();
