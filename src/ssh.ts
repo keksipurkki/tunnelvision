@@ -115,6 +115,7 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
       const url = tunnelEndpoint(username);
       const logging = makeLogger(shell);
 
+
       authenticated.on("error", error => {
         logging.error(`${error.message || "Caught an unexpected error"}. Aborting.`);
         shell.end();
@@ -135,6 +136,8 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
       logging.info(`Remote endpoint is available at ${url}`);
       logging.info(`Press ^C to stop`);
 
+      console.log(`${url.hostname} session started`);
+
       tunnels[url.hostname] = {
         connection: authenticated,
         tunnel: authenticated.forwardOut.bind(authenticated, info.address, info.port)
@@ -144,7 +147,15 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
         logging.access(req);
       });
 
-      authenticated.on("end", () => { delete tunnels[url.hostname]; });
+      authenticated.on("end", () => {
+        console.log(`${url.hostname} session ended`);
+        delete tunnels[url.hostname];
+      });
+
+      authenticated.on("timeout", () => {
+        console.log(`${url.hostname} session timed out`);
+        delete tunnels[url.hostname];
+      });
 
     } catch (error) {
       connection.end();
