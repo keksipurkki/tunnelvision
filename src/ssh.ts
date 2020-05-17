@@ -106,6 +106,10 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
 
     try {
 
+      connection.on("error", (error) => {
+        console.error(error.message);
+      });
+
       const { username, connection: authenticated } = await authenticate(connection);
       const [info, shell] = await Promise.all([
         getAddressInfo(authenticated),
@@ -114,7 +118,6 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
 
       const url = tunnelEndpoint(username);
       const logging = makeLogger(shell);
-
 
       authenticated.on("error", error => {
         logging.error(`${error.message || "Caught an unexpected error"}. Aborting.`);
