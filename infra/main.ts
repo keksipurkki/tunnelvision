@@ -138,7 +138,7 @@ class TunnelvisionStack extends cdk.Stack {
 
   // When the running app instances makes AWS calls
   get taskRole() {
-    const policies = ["AmazonS3FullAccess"];
+    const policies = ["AmazonS3FullAccess", "AmazonRoute53FullAccess"];
 
     const role = new iam.Role(this, "tunnelvision-role", {
       roleName: "tunnelvision-role",
