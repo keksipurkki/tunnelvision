@@ -12,29 +12,29 @@
     "release": "npm run lint && npm run build",
     "build": "tsc",
     "prettier": "prettier --write src/**",
-    "start": "tsnd --clear -- src/index.ts"
+    "start": "NODE_ENV=local tsnd --clear -- src/index.ts"
   },
   "author": "Elias A. Toivanen",
   "license": "MIT",
   "dependencies": {
-    "chalk": "4.0.0",
-    "ssh2": "0.8.9",
-    "tslib": "2.0.0"
+    "chalk": "4.1.2",
+    "ssh2": "^1.11.0",
+    "tslib": "2.4.0"
   },
   "devDependencies": {
-    "@aws-cdk/aws-autoscaling": "1.39.0",
-    "@aws-cdk/aws-ec2": "1.39.0",
-    "@aws-cdk/aws-ecs": "1.39.0",
-    "@aws-cdk/aws-iam": "1.39.0",
-    "@aws-cdk/aws-logs": "1.39.0",
-    "@aws-cdk/core": "1.39.0",
-    "@types/node": "14.0.1",
-    "@types/ssh2": "0.5.43",
-    "@typescript-eslint/parser": "^2.33.0",
-    "aws-cdk": "1.39.0",
-    "dotenv": "8.2.0",
-    "eslint": "^7.0.0",
-    "ts-node-dev": "1.0.0-pre.44",
-    "typescript": "3.9.2"
+    "@aws-cdk/aws-autoscaling": "1.173.0",
+    "@aws-cdk/aws-ec2": "1.173.0",
+    "@aws-cdk/aws-ecs": "1.173.0",
+    "@aws-cdk/aws-iam": "1.173.0",
+    "@aws-cdk/aws-logs": "1.173.0",
+    "@aws-cdk/core": "1.173.0",
+    "@types/node": "14.18.29",
+    "@types/ssh2": "0.5.52",
+    "@typescript-eslint/parser": "^5.37.0",
+    "aws-cdk": "1.173.0",
+    "dotenv": "8.6.0",
+    "eslint": "^8.23.1",
+    "ts-node-dev": "1.1.8",
+    "typescript": "3.9.10"
   }
 }

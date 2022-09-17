@@ -176,7 +176,7 @@ export default (hostKeys: string[], { maxConnections = 1 } = {}) => {
       return;
     }
 
-    const { port, address } = req.socket.address();
+    const { port, address } = req.socket.address() as net.AddressInfo;
     const { tunnel, connection } = tunnels[hostname];
 
     tunnel(address, port, (error, localhost) => {
